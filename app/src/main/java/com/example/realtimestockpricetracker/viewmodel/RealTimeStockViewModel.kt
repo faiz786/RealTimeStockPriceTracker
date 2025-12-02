@@ -42,7 +42,6 @@ class RealTimeStockViewModel @Inject constructor(
         if (state.value.isRunning) return
         _state.update { it.copy(isRunning = true) }
 
-        // Receiver: collect messages from WebSocket
         receiverJob = viewModelScope.launch {
             wsManager.incomingMessages()
                 .onEach { raw ->
@@ -67,7 +66,6 @@ class RealTimeStockViewModel @Inject constructor(
                 .collect()
         }
 
-        // Sender: every 2s send a price for each symbol
         senderJob = viewModelScope.launch(Dispatchers.IO) {
             while (isActive) {
                 val snapshot = _state.value.stocks
