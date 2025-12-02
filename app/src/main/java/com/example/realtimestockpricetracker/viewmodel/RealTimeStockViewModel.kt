@@ -3,20 +3,24 @@ package com.example.realtimestockpricetracker.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.realtimestockpricetracker.data.StockFeedRepository
 import com.example.realtimestockpricetracker.data.StockRepository
 import com.example.realtimestockpricetracker.model.FlashColor
 import com.example.realtimestockpricetracker.model.Stock
+import com.example.realtimestockpricetracker.model.StockUpdateDto
 import com.example.realtimestockpricetracker.uievents.StockUIState
 import com.example.realtimestockpricetracker.ws.WebSocketManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import kotlin.random.Random
 
 @HiltViewModel
 class RealTimeStockViewModel @Inject constructor(
-    private val wsManager: WebSocketManager
+    private val wsManager: WebSocketManager,
+    private val feedRepo: StockFeedRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -50,12 +54,10 @@ class RealTimeStockViewModel @Inject constructor(
                         raw.startsWith("::ERROR::") || raw == "::CLOSED::" || raw == "::DISCONNECTING::" ->
                             _state.update { it.copy(isConnected = false) }
                         else -> {
-                            // format: SYMBOL|PRICE (we send like that)
-                            val parts = raw.split("|")
-                            if (parts.size == 2) {
-                                val sym = parts[0]
-                                val price = parts[1].toDoubleOrNull()
-                                if (price != null) applyPrice(sym, price)
+                            try {
+                                val dto = Json.decodeFromString<StockUpdateDto>(raw)
+                                applyPrice(dto.symbol, dto.price)
+                            } catch (_: Exception) {
                             }
                         }
                     }
@@ -71,12 +73,13 @@ class RealTimeStockViewModel @Inject constructor(
                 val snapshot = _state.value.stocks
                 snapshot.forEach { stock ->
                     val newPrice = (stock.price * (0.98 + Random.nextDouble() * 0.04)).coerceAtLeast(0.01)
-                    val message = "${stock.symbol}|${"%.2f".format(newPrice)}"
-                    wsManager.send(message)
+
+                    feedRepo.sendPriceUpdate(stock, newPrice)
                 }
                 delay(2000)
             }
         }
+
     }
 
     private fun applyPrice(symbol: String, price: Double) {

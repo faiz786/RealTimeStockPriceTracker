@@ -1,5 +1,6 @@
 package com.example.realtimestockpricetracker.ws
 
+import com.example.realtimestockpricetracker.model.StockUpdateDto
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -7,6 +8,8 @@ import okhttp3.*
 import okio.ByteString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class WebSocketManager {
 
@@ -66,6 +69,11 @@ class WebSocketManager {
 
     fun send(message: String) {
         webSocket?.send(message)
+    }
+
+    fun sendStockUpdate(dto: StockUpdateDto) {
+        val json = Json.encodeToString(dto)
+        webSocket?.send(json)
     }
 
     fun stop() {
