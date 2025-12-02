@@ -1,7 +1,6 @@
 package com.example.realtimestockpricetracker
 
 import app.cash.turbine.test
-import com.example.realtimestockpricetracker.intents.StockIntent
 import com.example.realtimestockpricetracker.viewmodel.RealTimeStockViewModel
 import com.example.realtimestockpricetracker.ws.WebSocketManager
 import io.mockk.every
@@ -45,7 +44,7 @@ class RealTimeStockViewModelTest {
 
     @Test
     fun `emit messages updates state`() = runTest {
-        viewModel.processIntent(StockIntent.StartFeed)
+        viewModel.toggleFeed()
         advanceUntilIdle()
 
         wsFlow.emit("AAPL|150.0")

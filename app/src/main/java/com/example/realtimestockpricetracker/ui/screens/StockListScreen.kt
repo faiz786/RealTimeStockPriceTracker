@@ -7,7 +7,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.realtimestockpricetracker.intents.StockIntent
 import com.example.realtimestockpricetracker.ui.organisms.StockListAppBar
 import com.example.realtimestockpricetracker.ui.organisms.StockRowItem
 import com.example.realtimestockpricetracker.viewmodel.RealTimeStockViewModel
@@ -34,7 +33,7 @@ fun StockListScreen(
                 onToggleTheme = onToggleTheme,
                 isRunning = state.isRunning,
                 onToggleFeed = {
-                    scope.launch { viewModel.processIntent(StockIntent.ToggleFeed) }
+                    scope.launch { viewModel.toggleFeed() }
                 }
             )
         }
